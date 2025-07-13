@@ -20,7 +20,7 @@ const io = new Server(server, {
     origin: [
       "http://localhost:3000",
       "http://localhost:5173",
-      "http://0.0.0.0:5173",
+      "http://192.168.1.38:5173",
     ],
     credentials: true,
   },
