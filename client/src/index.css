@@ -3,7 +3,7 @@
 @import "tailwindcss";
 
 @theme inline {
-  --font-poppins: "Poppins";
+  --font-poppins: "Poppins", "Kanit", sans-serif;
   --font-climate-crisis: "Climate Crisis";
   --font-kanit: "Kanit";
 }
