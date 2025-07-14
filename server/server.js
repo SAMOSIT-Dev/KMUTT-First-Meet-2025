@@ -27,6 +27,8 @@ const io = new Server(server, {
     credentials: true,
   },
   transports: ["websocket"],
+  pingInterval: 20000,
+  pingTimeout: 5000,
 });
 
 instrument(io, {
@@ -37,13 +39,11 @@ instrument(io, {
 
 CardService.setIO(io);
 
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cors({ origin: "*" })); 
+app.use(cors({ origin: "*" }));
 
-
-app.use("/", cardRoutes); 
+app.use("/", cardRoutes);
 
 io.on("connect", (socket) => {
   clientSocket(io, socket);
