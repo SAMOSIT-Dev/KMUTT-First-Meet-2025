@@ -2,3 +2,7 @@ test-socket
 monitor
 k6-script.js
 .DS_store
+node_modules
+load-test
+.env
+dist

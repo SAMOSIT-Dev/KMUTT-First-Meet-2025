@@ -26,7 +26,7 @@ const io = new Server(server, {
     origin: ALLOWED_ORIGINS,
     credentials: true,
   },
-  transports: ["polling", "websocket"],
+  transports: ["websocket"],
 });
 
 instrument(io, {
