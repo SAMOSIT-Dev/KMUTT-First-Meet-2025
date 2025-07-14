@@ -22,13 +22,14 @@ const app = express();
 const server = http.createServer(app);
 
 const io = new Server(server, {
+  // path: "/sercice",
   cors: {
     origin: ALLOWED_ORIGINS,
     credentials: true,
   },
   transports: ["websocket"],
-  pingInterval: 20000,
-  pingTimeout: 5000,
+  // pingInterval: 20000,
+  // pingTimeout: 5000,
 });
 
 instrument(io, {
