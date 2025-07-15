@@ -27,8 +27,8 @@ const io = new Server(server, {
     credentials: true,
   },
   transports: ["websocket"],
-  pingInterval: 20000,
-  pingTimeout: 10000,
+  pingInterval: 2000,
+  pingTimeout: 5000,
 });
 
 instrument(io, {
