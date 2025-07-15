@@ -6,9 +6,9 @@ const socketOptions = {
   autoConnect: false,
   transports: ["websocket"],
   reconnection: true,
-  reconnectionAttempts: 5,
+  reconnectionAttempts: 10,
   reconnectionDelay: 1000,
-  timeout: 10000,
+  timeout: 60000,
 };
 
 export const socket: Socket = io(SOCKET_URL, socketOptions);
