@@ -12,20 +12,21 @@ const clientSocket = require("./src/sockets/client.socket");
 const CardService = require("./src/services/card.service");
 
 const PORT = process.env.PORT || 3000;
-const ALLOWED_ORIGINS = [
-  "http://localhost:3000",
-  "http://localhost:5173",
-  "http://192.168.1.38:5173",
-];
+// const ALLOWED_ORIGINS = [
+//   "http://localhost:3000",
+//   "http://localhost:5173",
+//   "http://192.168.1.38:5173",
+// ];
 
 const app = express();
 const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: ALLOWED_ORIGINS,
+    origin: "*",
     credentials: true,
   },
+  path: "/service/socket",
   transports: ["websocket"],
   pingInterval: 2000,
   pingTimeout: 5000,
@@ -37,7 +38,7 @@ instrument(io, {
   readonly: true,
 });
 
-CardService.setIO(io);
+CardService.init(io);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

@@ -1,19 +1,19 @@
 const CardService = require("../services/card.service");
 
 class CardController {
-  static getClients(req, res) {
-    const clients = CardService.getClients();
+  static async getClients(req, res) {
+    const clients = await CardService.getClients();
     res.json({ clients });
   }
 
-  static resetClients(req, res) {
-    const result = CardService.resetClients();
+  static async resetClients(req, res) {
+    const result = await CardService.resetClients();
     res.json(result);
   }
 
-  static sendCard(req, res) {
+  static async sendCard(req, res) {
     try {
-      const result = CardService.sendCards();
+      const result = await CardService.sendCards();
       res.json(result);
     } catch (error) {
       console.error("sendCard error:", error);
