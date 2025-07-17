@@ -72,6 +72,8 @@ class CardService {
       await this.redis.del(`user:${uid}`);
     }
 
+    this.io.emit("clients", []);
+
     return {
       message: "Processing complete",
       totalClients: clients.length,
@@ -122,6 +124,10 @@ class CardService {
         failCount++;
       }
     }
+
+    const updated = await this.getClients()
+
+    this.io.emit("clients", updated);
 
     return {
       message: "Processing complete",
