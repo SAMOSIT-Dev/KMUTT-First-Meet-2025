@@ -9,7 +9,7 @@ class CardService {
     this.io = ioInstance;
     this.redis = redisIntance
     this.redis.on("error", (err) => console.error("Redis error", err));
-    await this.redis.connect();
+    // await this.redis.connect();
   }
 
   static async addOrUpdateClient(uid, socketId) {

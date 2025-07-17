@@ -49,15 +49,15 @@ io.on("connect", (socket) => {
 const pubClient = createClient({ url: "redis://127.0.0.1:6379" });
 const subClient = pubClient.duplicate();
 
-CardService.init(io, pubClient);
-
 Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
   io.adapter(createAdapter(pubClient, subClient));
-
+  
   io.on("connect", (socket) => {
     clientSocket(io, socket, pubClient);
   });
 })
+
+CardService.init(io, pubClient);
 
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
