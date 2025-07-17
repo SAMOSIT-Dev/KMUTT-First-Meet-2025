@@ -1,24 +1,15 @@
 import Container from "./components/Container";
-import Card, { type CardType } from "./components/Card";
+import Card from "./components/Card";
 import HelperDialog from "./components/HelperDialog";
-import { useCard } from "./hooks/useCard";
-import StatusIndicator from "./components/StatusIndicator";
+import { randomCardNumberAndType } from "./libs/random";
 
 export default function App() {
-  const { cardNumber, cardType, status } = useCard();
-
+  const card = randomCardNumberAndType();
   return (
     <Container>
-      <div className="fixed m-4 top-0 left-0">
-        <StatusIndicator status={status ?? "pending"} />
-      </div>
       <HelperDialog />
-      <div className="fixed top-1/2 left-1/2 -translate-1/2 h-[90dvh] w-[90dvw] max-w-lg">
-        <Card
-          allowTapping={!!cardNumber && !!cardType}
-          type={cardType as CardType}
-          number={cardNumber}
-        />
+      <div className="fixed top-1/2 left-1/2 -translate-1/2 h-[90dvh] w-[90dvw] max-w-lg flex flex-col">
+        <Card allowTapping type={card.type} number={card.number} />
       </div>
     </Container>
   );
