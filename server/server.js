@@ -15,11 +15,6 @@ const { createClient } = require("redis");
 const { createAdapter } = require("@socket.io/redis-adapter");
 
 const PORT = process.env.PORT || 3000;
-// const ALLOWED_ORIGINS = [
-//   "http://localhost:3000",
-//   "http://localhost:5173",
-//   "http://192.168.1.38:5173",
-// ];
 
 const app = express();
 const server = http.createServer(app);
@@ -41,8 +36,6 @@ instrument(io, {
   readonly: true,
 });
 
-CardService.init(io);
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cors({ origin: "*" }));
@@ -53,8 +46,10 @@ io.on("connect", (socket) => {
   clientSocket(io, socket);
 });
 
-const pubClient = createClient({ url: "redis://0.0.0.0:6379" });
+const pubClient = createClient({ url: "redis://127.0.0.1:6379" });
 const subClient = pubClient.duplicate();
+
+CardService.init(io, pubClient);
 
 Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
   io.adapter(createAdapter(pubClient, subClient));

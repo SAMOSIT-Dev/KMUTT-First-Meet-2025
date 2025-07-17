@@ -5,9 +5,9 @@ class CardService {
   static io;
   static redis;
 
-  static async init(ioInstance) {
+  static async init(ioInstance, redisIntance) {
     this.io = ioInstance;
-    this.redis = createClient({ url: "redis://localhost:6379" });
+    this.redis = redisIntance
     this.redis.on("error", (err) => console.error("Redis error", err));
     await this.redis.connect();
   }
