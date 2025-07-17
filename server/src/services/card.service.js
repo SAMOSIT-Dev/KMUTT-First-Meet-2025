@@ -1,50 +1,88 @@
-const MemoryDb = require("../../libs/memory-db");
+const { createClient } = require("redis");
 const { Card } = require("../../libs/card-picker");
 
 class CardService {
-  static clients = new MemoryDb();
   static io;
+  static redis;
 
-  static setIO(ioInstance) {
+  static async init(ioInstance) {
     this.io = ioInstance;
+    this.redis = createClient({ url: "redis://localhost:6379" });
+    this.redis.on("error", (err) => console.error("Redis error", err));
+    await this.redis.connect();
   }
 
-  static getClients() {
-    return this.clients.entries();
+  static async addOrUpdateClient(uid, socketId) {
+    const clientKey = `user:${uid}`;
+
+    const existingData = await this.redis.hGetAll(clientKey);
+
+    await this.redis.hSet(clientKey, {
+      socketId,
+      cardType: existingData.cardType || "",
+      cardNumber: existingData.cardNumber || 0,
+    });
+
+    await this.redis.sAdd("connectedUsers", uid);
+
+    this.io.sockets.sockets.get(socketId)?.join(`user:${uid}`);
   }
 
-  static resetClients() {
-    const connectedClients = this.getClients();
 
+  static async getClient(uid) {
+    return await this.redis.hGetAll(`user:${uid}`);
+  }
+
+  static async getClients() {
+    const uids = await this.redis.sMembers("connectedUsers");
+    const clients = [];
+
+    for (const uid of uids) {
+      const data = await this.getClient(uid);
+      if (data && data.socketId) {
+        clients.push([uid, data]);
+      }
+    }
+
+    return clients;
+  }
+
+  static async resetClients() {
+    const clients = await this.getClients();
     let successCount = 0;
     let failCount = 0;
 
-    try {
-      for (const [uid, context] of connectedClients) {
-        const socketId = context.socketId;
-        if (!socketId) {
-          failCount++;
-          continue;
-        }
-        this.io.in(socketId).disconnectSockets(true);
-        successCount++;
+    for (const [uid, context] of clients) {
+      const { socketId } = context;
+      if (!socketId) {
+        failCount++;
+        continue;
       }
-    } catch {
-      failCount++;
+
+      try {
+        await this.io.in(socketId).disconnectSockets(true);
+        successCount++;
+      } catch {
+        failCount++;
+      }
     }
 
-    this.clients.reset();
+    await this.redis.del("connectedUsers");
+    for (const [uid] of clients) {
+      await this.redis.del(`user:${uid}`);
+    }
 
     return {
       message: "Processing complete",
-      totalClients: connectedClients.length,
+      totalClients: clients.length,
       success: successCount,
       failed: failCount,
     };
   }
 
-  static sendCards() {
-    const connectedClients = this.getClients().map(([uid, { socketId }]) => ({
+  static async sendCards() {
+    const clients = await this.getClients();
+    const connectedClients = clients.map(([uid, { socketId }]) => ({
       clientId: uid,
       socketId,
     }));
@@ -72,7 +110,11 @@ class CardService {
 
         const { type: cardType, num: cardNumber } = assignedCard;
 
-        this.clients.update(clientId, { cardType, cardNumber });
+        await this.redis.hSet(`user:${clientId}`, {
+          cardType,
+          cardNumber,
+        });
+
         this.io.to(socketId).emit("user:card", { cardType, cardNumber });
 
         successCount++;
@@ -89,25 +131,16 @@ class CardService {
     };
   }
 
-  static addOrUpdateClient(uid, socketId) {
-    if (!this.clients.has(uid)) {
-      this.clients.set(uid, {
-        cardNumber: 0,
-        cardType: "",
-        socketId,
-      });
-    } else {
-      this.clients.update(uid, { socketId });
-    }
+  static async getNumberOfConnected() {
+    const clients = await this.redis.sMembers("connectedUsers");
+    return clients.length;
   }
 
-  static getClient(uid) {
-    return this.clients.get(uid);
-  }
-
-  static getNumberOfConnected() {
-    return this.io.of("/").sockets.size;
+  static async removeClient(uid, socketId) {
+    await this.redis.sRem("connectedUsers", uid);
+    await this.redis.del(`user:${uid}`);
   }
 }
 
 module.exports = CardService;
+

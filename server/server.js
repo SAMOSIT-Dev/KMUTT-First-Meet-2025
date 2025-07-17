@@ -11,21 +11,25 @@ const clientSocket = require("./src/sockets/client.socket");
 
 const CardService = require("./src/services/card.service");
 
+const { createClient } = require("redis");
+const { createAdapter } = require("@socket.io/redis-adapter");
+
 const PORT = process.env.PORT || 3000;
-const ALLOWED_ORIGINS = [
-  "http://localhost:3000",
-  "http://localhost:5173",
-  "http://192.168.1.38:5173",
-];
+// const ALLOWED_ORIGINS = [
+//   "http://localhost:3000",
+//   "http://localhost:5173",
+//   "http://192.168.1.38:5173",
+// ];
 
 const app = express();
 const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: ALLOWED_ORIGINS,
+    origin: "*",
     credentials: true,
   },
+  path: "/service/socket",
   transports: ["websocket"],
   pingInterval: 2000,
   pingTimeout: 5000,
@@ -37,7 +41,7 @@ instrument(io, {
   readonly: true,
 });
 
-CardService.setIO(io);
+CardService.init(io);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -49,6 +53,17 @@ io.on("connect", (socket) => {
   clientSocket(io, socket);
 });
 
-server.listen(PORT, "0.0.0.0", () => {
+const pubClient = createClient({ url: "redis://0.0.0.0:6379" });
+const subClient = pubClient.duplicate();
+
+Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
+  io.adapter(createAdapter(pubClient, subClient));
+
+  io.on("connect", (socket) => {
+    clientSocket(io, socket, pubClient);
+  });
+})
+
+server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
