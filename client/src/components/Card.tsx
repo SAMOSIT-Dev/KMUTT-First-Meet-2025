@@ -1,7 +1,7 @@
 import { motion, type Transition } from "framer-motion";
 
 import FadeInWhenVisible from "./FadeInWhenVisible";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "../libs/utils";
 import HeartIcon from "../assets/icons/Heart";
 import DiamondIcon from "../assets/icons/Diamond";
@@ -130,6 +130,12 @@ export default function Card({
       setIsFlipped(!isFlipped);
     }
   };
+
+  useEffect(() => {
+    if (!type || !number || number === 0 || type === "" as CardType) {
+      setIsFlipped(false)
+    }
+  }, [number, type])
 
   return (
     <motion.div
